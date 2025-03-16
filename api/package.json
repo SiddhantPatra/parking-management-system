@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "jest"
   },
   "author": "Siddhanta patra",
   "license": "ISC",
@@ -20,6 +21,7 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "jest": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
     "nodemon": "^3.1.9"
