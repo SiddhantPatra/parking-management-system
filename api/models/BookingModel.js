@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const BookingSchema = new mongoose.Schema({
     parkingSlot: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Parking", // Reference to the ParkingSlot model
+        ref: "Parking",  
         required: true,
     },
     bookedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Reference to the User model
+        ref: "User",  
         required: true,
     },
     vehicleNumber: {
@@ -31,8 +31,33 @@ const BookingSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Pending", "Confirmed", "Cancelled"],
-        default: "Pending",
+        enum: ["Pending", "Confirmed", "Active", "Completed", "Overstayed", "Cancelled"],
+        default: "Active"
+    },
+    actualExitTime: {
+        type: Date
+    },
+    fineAmount: {
+        type: Number,
+        default: 0
+    },
+    isFinePaid: {
+        type: Boolean,
+        default: false
+    },
+    overstayDays: {
+        type: Number,
+        default: 0
+    },
+    dailyRate: Number,
+    review: {
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5
+        },
+        comment: String,
+        reviewedAt: Date
     },
     createdAt: {
         type: Date,

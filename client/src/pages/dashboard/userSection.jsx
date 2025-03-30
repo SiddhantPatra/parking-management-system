@@ -23,7 +23,7 @@ export function UserSection() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUserId, setEditingUserId] = useState(null); // Track which user is being edited
     const [editedUserDetails, setEditedUserDetails] = useState({}); // Store edited details
-    const [currentUserRole, setCurrentUserRole] = useState(""); // Track the role of the logged-in user
+  
 
 
     useEffect(() => {
@@ -108,6 +108,34 @@ export function UserSection() {
         });
     };
 
+    const handleDeleteUser = async (user) => {
+
+        if (!window.confirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`)) {
+            return;
+        }
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                throw new Error("No token found. Please log in.");
+            }
+
+            await publicRequest.delete(`/user/${user._id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            // Remove the deleted user from the state
+            setUsers(prevUsers => prevUsers.filter(u => u._id !== user._id));
+
+            // Show success message
+            alert("User deleted successfully");
+        } catch (err) {
+            console.error("Error deleting user:", err.response?.data?.error || err.message);
+            alert(err.response?.data?.error || "Failed to delete user.");
+        }
+    }
+
     const handleSaveUser = async (userId) => {
         try {
             const token = localStorage.getItem("token");
@@ -162,35 +190,30 @@ export function UserSection() {
             console.error("localStorage is not available.");
             return false;
         }
-    
+
         // Parse the persisted state from localStorage
         const persistedState = JSON.parse(localStorage.getItem("persist:root"));
         if (!persistedState || !persistedState.user) {
             console.error("No user data found in localStorage.");
             return false;
         }
-    
+
         // Parse the user data from the persisted state
         const user = JSON.parse(persistedState.user);
         if (!user || !user.currentUser) {
             console.error("No currentUser found in the user data.");
             return false;
         }
-    
+
         // Extract current user's ID and role
         const currentUserId = user.currentUser._id;
         const currentUserRole = user.currentUser.role;
-    
-        // console.log("Current User ID:", currentUserId);
-        // console.log("Current User Role:", currentUserRole);
-        // console.log("Target User ID:", targetUserId);
-        // console.log("Target User Role:", targetUserRole);
-    
+
         // Admin can edit all users (including other admins and moderators)
         if (currentUserRole === "admin") {
             return true;
         }
-    
+
         // Moderator can edit users and themselves, but not other moderators or admins
         if (currentUserRole === "moderator") {
             return (
@@ -198,8 +221,35 @@ export function UserSection() {
                 targetUserId === currentUserId // Moderator can edit themselves
             );
         }
-    
+
         // Default: no permission
+        return false;
+    };
+
+    const canDeleteUser = (targetUserRole, targetUserId) => {
+        // Similar to canEditUser but with stricter rules
+        const persistedState = JSON.parse(localStorage.getItem("persist:root"));
+        if (!persistedState || !persistedState.user) {
+            console.error("No user data found in localStorage.");
+            return false;
+        }
+    
+        const user = JSON.parse(persistedState.user);
+        if (!user || !user.currentUser) {
+            console.error("No currentUser found in the user data.");
+            return false;
+        }
+    
+        const currentUserId = user.currentUser._id;
+        const currentUserRole = user.currentUser.role;
+    
+        // Only admin can delete users
+        if (currentUserRole === "admin") {
+            // Admin can delete anyone except themselves
+            return targetUserId !== currentUserId;
+        }
+    
+        // Moderators and regular users cannot delete anyone
         return false;
     };
 
@@ -239,6 +289,7 @@ export function UserSection() {
                                 const fullName = `${firstName} ${lastName}`;
                                 const isEditing = editingUserId === _id;
                                 const canEdit = canEditUser(role, _id); // Check if the current user can edit this user
+                                const canDelete = canDeleteUser(role, _id); // Check if the current user can edit this user
 
                                 return (
                                     <tr key={_id}>
@@ -359,13 +410,16 @@ export function UserSection() {
                                                             Edit
                                                         </Typography>
                                                     )}
-                                                    <Typography
-                                                        as="a"
-                                                        href="#"
-                                                        className="text-xs font-semibold text-red-600"
-                                                    >
-                                                        Block
-                                                    </Typography>
+                                                    {canDelete && (
+                                                        <Typography
+                                                            as="a"
+                                                            href="#"
+                                                            className="text-xs font-semibold text-red-600"
+                                                            onClick={() => handleDeleteUser({ _id, profilePicture, firstName, lastName, email, role, verified, contact, vehicle })}
+                                                        >
+                                                            Delete
+                                                        </Typography>
+                                                    )}
                                                 </>
                                             )}
                                         </td>

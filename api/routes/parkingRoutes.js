@@ -1,34 +1,63 @@
 import express from "express";
 import {
+    createParkingLot,
+    addParkingLevel,
     createParkingSlot,
+    getParkingSlotsByLevel,
+    getAvailableParkingSlots,
+    bookParkingSlot,
+    getParkingLots,
+    getLevelsByLot,
+    updateParkingLot,
+    updateParkingLevel,
     updateParkingSlot,
     deleteParkingSlot,
     getAllParkingSlots,
-    getAvailableParkingSlots,
-    bookParkingSlot,createBulkParkingSlot
-} from "../controllers/parkingController.js"; 
-import {
-    verifyToken,
-    verifyTokenAndAdmin,
-    verifyTokenAndModerator,
-    verifyTokenAndAdminOrModerator,
-} from "./verifyToken.js"; 
+    deleteParkingLevel,
+    deleteParkingLot,
+    getParkingSlot,
+    checkSlotAvailability,
+    updateSlotStatus,
+    getBookingsBySlot,
+    cancelBooking,
+} from "../controllers/parkingController.js";
+
+import { verifyToken, verifyTokenAndAdmin, verifyTokenAndAdminOrModerator } from "./verifyToken.js";
 
 const router = express.Router();
+// Availability Check
+router.get("/slots/availability", checkSlotAvailability);
 
-// Admin-only routes
-router.post("/slots", verifyTokenAndAdmin, createParkingSlot); // Only admin can create slots
-router.delete("/slots/:id", verifyTokenAndAdmin, deleteParkingSlot); // Only admin can delete slots 
+// Parking Lot Routes
+router.post("/lots", verifyTokenAndAdmin, createParkingLot);
+router.get("/lots", getParkingLots);
+router.put("/lots/:id", verifyTokenAndAdmin, updateParkingLot);
+router.delete("/lots/:id", verifyTokenAndAdmin, deleteParkingLot);
+
+// Parking Level Routes
+router.post("/levels", verifyTokenAndAdminOrModerator, addParkingLevel);
+router.get("/levels/:lotId", getLevelsByLot);
+router.put("/levels/:id", verifyTokenAndAdminOrModerator, updateParkingLevel);
+router.delete("/levels/:id", verifyTokenAndAdmin, deleteParkingLevel);
+
+// Parking Slot Routes
+router.post("/slots", verifyTokenAndAdminOrModerator, createParkingSlot);
+router.get("/levels/:levelId/slots", getParkingSlotsByLevel);
+router.put("/slots/:id", verifyTokenAndAdminOrModerator, updateParkingSlot);
+router.delete("/slots/:id", verifyTokenAndAdmin, deleteParkingSlot);
+
+// General Slot Routes
+router.get("/slots", verifyToken, getAllParkingSlots);
+router.get("/slots/:id", verifyToken, getParkingSlot);
+router.get("/slots/available", verifyToken, getAvailableParkingSlots);
+
+// Booking Routes
+router.post("/slots/:id/book", verifyToken, bookParkingSlot);
+router.get("/slots/:id/bookings", verifyToken, getBookingsBySlot);
+router.delete("/bookings/:id", verifyToken, cancelBooking);
+
+// Slot Status Management
+router.put("/slots/:id/status", verifyTokenAndAdminOrModerator, updateSlotStatus);
 
 
-// Admin or Moderator routes
-router.put("/slots/:id", verifyTokenAndAdminOrModerator, updateParkingSlot); // Admin or moderator can update slots
-
-// All users routes (protected by token)
-router.get("/slots", verifyToken, getAllParkingSlots); // All authenticated users can view all slots
-router.get("/slots/available", verifyToken, getAvailableParkingSlots); // All authenticated users can view available slots
-router.post("/book", verifyToken, bookParkingSlot); // All authenticated users can book slots
-
-// Book a parking slot
-router.put("/slots/:id/book", verifyToken, bookParkingSlot);
 export default router;

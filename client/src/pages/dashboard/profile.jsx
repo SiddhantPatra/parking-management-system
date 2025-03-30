@@ -20,16 +20,14 @@ import {
   ChatBubbleLeftEllipsisIcon,
   Cog6ToothIcon,
   PencilIcon,
-} from "@heroicons/react/24/solid";
-import { Link } from "react-router-dom";
-import { ProfileInfoCard, MessageCard } from "@/widgets/cards";
-import { platformSettingsData, conversationsData, projectsData } from "@/data";
+} from "@heroicons/react/24/solid"; 
+import { ProfileInfoCard, MessageCard } from "@/widgets/cards"; 
 import { publicRequest } from "@/requestMethods";
 import { updateUser } from "@/redux/userRedux"; // Import your Redux action
 
 export function Profile() {
   const user = useSelector((state) => state.user);
-  const dispatch = useDispatch(); // Initialize useDispatch
+  const dispatch = useDispatch();  
   const [isEditing, setIsEditing] = useState(false);
   const [editedUserDetails, setEditedUserDetails] = useState({
     firstName: user.currentUser?.firstName || "",
@@ -55,9 +53,7 @@ export function Profile() {
     try {
       const token = localStorage.getItem("token");
       const userId = user.currentUser._id;
-  
-      // console.log("Token:", token);
-      // console.log("Logged-in User ID:", userId);
+   
   
       if (!token) {
         throw new Error("No token found. Please log in.");
@@ -125,24 +121,7 @@ export function Profile() {
                 </Typography>
               </div>
             </div>
-            <div className="w-96">
-              <Tabs value="app">
-                <TabsHeader>
-                  <Tab value="app">
-                    <HomeIcon className="-mt-1 mr-2 inline-block h-5 w-5" />
-                    App
-                  </Tab>
-                  <Tab value="message">
-                    <ChatBubbleLeftEllipsisIcon className="-mt-0.5 mr-2 inline-block h-5 w-5" />
-                    Message
-                  </Tab>
-                  <Tab value="settings">
-                    <Cog6ToothIcon className="-mt-1 mr-2 inline-block h-5 w-5" />
-                    Settings
-                  </Tab>
-                </TabsHeader>
-              </Tabs>
-            </div>
+            
           </div>
           <div className="gird-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3">
             <ProfileInfoCard

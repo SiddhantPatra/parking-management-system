@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+      {
+        "source": "/dashboard/:path*",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/auth/:path*",
+        "destination": "/index.html"
+      }
+    ]
+  }

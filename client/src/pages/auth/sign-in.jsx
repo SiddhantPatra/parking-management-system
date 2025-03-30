@@ -19,8 +19,7 @@ export function SignIn() {
     e.preventDefault();
     try {
     const response = await login(dispatch, { email, password });
-
-    // console.log("Login Response:", response); // ✅ Debugging output
+ 
 
     if (response?.user) {
       navigate("/dashboard/profile"); // Redirect only if user exists

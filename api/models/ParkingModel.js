@@ -4,46 +4,42 @@ const ParkingSchema = new mongoose.Schema({
     slotNumber: {
         type: String,
         required: true,
-        unique: true,
+    },
+    parkingLevel: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ParkingLevel", // Linked to a specific level
+        required: true,
     },
     status: {
         type: String,
-        enum: ["Available", "Occupied", "Reserved"],
-        default: "Available",
+        enum: ["Available", "Unavailable", "Booked"],
+        default: "Available"
     },
-    location: {
-        type: String,
-        required: true,
-    },
+    reviews: [{
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        rating: { type: Number, min: 1, max: 5 },
+        comment: String,
+        createdAt: { type: Date, default: Date.now }
+    }],
+    averageRating: { type: Number, default: 0 },
     price: {
         type: Number,
         required: true,
         min: 0,
     },
-    vehicleNumber: {
-        type: String,
-        default: null,
-    },
-    bookedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null,
+    fineAmount: {
+        type: Number,
+        default: 0,
+        min: 0
     },
     createdAt: {
         type: Date,
         default: Date.now,
     },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
 });
 
-// Update `updatedAt` before saving
-ParkingSchema.pre("save", function (next) {
-    this.updatedAt = Date.now();
-    next();
-});
+// Add a compound index to enforce uniqueness on slotNumber and parkingLevel
+ParkingSchema.index({ slotNumber: 1, parkingLevel: 1 }, { unique: true });
 
 const Parking = mongoose.model("Parking", ParkingSchema);
 export default Parking;

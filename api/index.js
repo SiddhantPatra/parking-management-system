@@ -9,6 +9,8 @@ const app = express();
 const allowedOrigins = [
   "https://parkingsystem-gules.vercel.app",
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
 ];
 
 app.use((req, res, next) => {
@@ -16,7 +18,7 @@ app.use((req, res, next) => {
   if (allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
   }
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT,PATCH,  DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
 
@@ -29,27 +31,29 @@ app.use((req, res, next) => {
 
 // ✅ Enable JSON parsing
 app.use(express.json());
-
-// ✅ Debugging: Log All Incoming Requests
-// app.use((req, res, next) => {
-//   if (process.env.NODE_ENV !== "production") {
-// console.log(`Incoming request: ${req.method} ${req.path}`);
-// console.log("Headers:", req.headers);
-//   }
-//   next();
-// });
+ 
 
 // ✅ Import Routes
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
 import parkingRoutes from "./routes/parkingRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import statsRoute from "./routes/statsRoute.js";
+import { manualTrigger } from "./cronJobs.js";
 
 // ✅  Routes
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/parking", parkingRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/stats", statsRoute);
+
+
+app.get('/api/test/check-overstays', async (req, res) => {
+  await manualTrigger();
+  res.json({ message: "Manual overstay check completed" });
+});
+
 
 app.get("/", (req, res) => {
   res.send("Hello! From ParkingSystem API");

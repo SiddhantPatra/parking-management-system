@@ -2,6 +2,8 @@
 
 The **Parking Management System** is a web-based application designed to efficiently manage parking slots. It allows users to book parking slots, view availability, and manage bookings. Administrators have functionalities to oversee users, parking slots, and reservations. The system is built using **Node.js, Express.js, MongoDB, and React.js**.
 
+## Live Example - https://parkingsystem-gules.vercel.app/
+
 ## Table of Contents
 - [Features](#features)
 - [Technologies Used](#technologies-used)
