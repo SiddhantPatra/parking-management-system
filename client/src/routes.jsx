@@ -7,7 +7,7 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, UserSection } from "@/pages/dashboard";
+import { Home, Profile,  UserSection } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 import ParkingManagement from "./pages/dashboard/parkingManagement";
 import BookingManagement from "./pages/dashboard/bookingManagement";

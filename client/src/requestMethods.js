@@ -1,7 +1,6 @@
 import axios from "axios";
 
-// const BASE_URL = "http://localhost:5001/api";
-const BASE_URL = "https://parkingsystem-api.vercel.app/api/"; 
+const BASE_URL = "http://localhost:5001/api"; 
 
 const TOKEN = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("persist:root"))?.user;

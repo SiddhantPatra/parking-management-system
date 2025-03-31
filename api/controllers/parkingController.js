@@ -56,7 +56,7 @@ export const addParkingLevel = async (req, res) => {
 // ✅ 3️⃣ Create a Parking Slot in a Floor
 export const createParkingSlot = async (req, res) => {
     try {
-        const { slotNumber, parkingLevel, price } = req.body;
+        const { slotNumber, parkingLevel, price, fineAmount } = req.body;
 
         // Ensure the parking level exists
         const levelExists = await ParkingLevel.findById(parkingLevel);
@@ -65,7 +65,9 @@ export const createParkingSlot = async (req, res) => {
         }
 
         // Create a new parking slot with a default status
-        const newSlot = new Parking({ slotNumber, parkingLevel, price, status: "Available" });
+        const newSlot = new Parking({
+            slotNumber, parkingLevel, price, fineAmount, status: "Available"
+        });
         await newSlot.save();
         res.status(201).json(newSlot);
     } catch (error) {
@@ -149,14 +151,14 @@ export const getAvailableParkingSlots = async (req, res) => {
 export const checkSlotAvailability = async (req, res) => {
     try {
         const { slotId, fromDate, toDate } = req.query;
- 
+
 
         if (!mongoose.Types.ObjectId.isValid(slotId)) {
             return res.status(400).json({ message: "Invalid Parking Slot ID" });
         }
 
         const slot = await Parking.findById(slotId);
-        if (!slot) { 
+        if (!slot) {
             return res.status(404).json({ message: "Parking slot not found" });
         }
 
@@ -181,8 +183,8 @@ export const checkSlotAvailability = async (req, res) => {
 export const bookParkingSlot = async (req, res) => {
     try {
         const { fromDate, toDate, vehicleNumber } = req.body;
-        const { id } = req.params;  
-        const userId = req.user.id;  
+        const { id } = req.params;
+        const userId = req.user.id;
 
         // Validate input dates
         if (!fromDate || !toDate) {
@@ -194,13 +196,13 @@ export const bookParkingSlot = async (req, res) => {
         }
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Reset time to midnight for an accurate date-only comparison
-        
+
         const fromDateObj = new Date(fromDate);
         fromDateObj.setHours(0, 0, 0, 0); // Reset fromDate time to midnight
-        
+
         if (fromDateObj < today) {
             return res.status(400).json({ message: "Cannot book for past dates" });
-        } 
+        }
 
         // Validate vehicle number
         if (!vehicleNumber || vehicleNumber.trim() === "") {
@@ -231,7 +233,7 @@ export const bookParkingSlot = async (req, res) => {
         });
 
         await booking.save();
- 
+
 
         res.status(201).json({
             message: "Booking successful",
@@ -299,7 +301,7 @@ export const getAllParkingSlots = async (req, res) => {
 // ✅ Get Parking Slot by ID
 export const getParkingSlot = async (req, res) => {
     try {
-        const { id } = req.params; 
+        const { id } = req.params;
 
         // Validate ObjectId format
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -307,7 +309,7 @@ export const getParkingSlot = async (req, res) => {
         }
 
         // Fetch the parking slot by ID
-        const slot = await Parking.findById(id); 
+        const slot = await Parking.findById(id);
 
         // Check if the slot exists
         if (!slot) {
@@ -316,7 +318,7 @@ export const getParkingSlot = async (req, res) => {
 
         // Return the slot data
         res.status(200).json({ data: slot });
-    } catch (error) { 
+    } catch (error) {
         res.status(500).json({ message: "Error fetching parking slot", error: error.message });
     }
 };
@@ -412,7 +414,7 @@ export const updateParkingLevel = async (req, res) => {
 export const updateParkingSlot = async (req, res) => {
     try {
         const { id } = req.params;
-        const { slotNumber, parkingLevel, price,fineAmount , status } = req.body;
+        const { slotNumber, parkingLevel, price, fineAmount, status } = req.body;
         const userRole = req.user.role;
 
         const slot = await Parking.findById(id);
@@ -540,7 +542,7 @@ export const deleteParkingSlot = async (req, res) => {
         res.status(500).json({ message: "Error deleting parking slot", error });
     }
 };
- 
+
 export const updateSlotStatus = async (req, res) => {
     try {
         const { id } = req.params;
