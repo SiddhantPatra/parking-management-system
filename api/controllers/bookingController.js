@@ -31,7 +31,60 @@ export const createBooking = async (req, res) => {
         res.status(500).json({ message: "Error creating booking", error });
     }
 };
- 
+
+// Get all bookings for a user
+// export const getUserBookings = async (req, res) => {
+//     try {
+//         console.log('Incoming request headers:', req.headers);
+//         console.log('Request user:', req.user);
+
+//         const userId = req.params.userId || req.user.id;
+//         console.log('Using userId:', userId);
+
+//         if (!mongoose.Types.ObjectId.isValid(userId)) {
+//             console.log('Invalid user ID format');
+//             return res.status(400).json({ message: 'Invalid user ID format' });
+//         }
+
+//         const bookings = await Booking.find({ bookedBy: userId })
+//             .populate({
+//                 path: 'parkingSlot',
+//                 select: 'slotNumber status price',
+//                 populate: {
+//                     path: 'parkingLevel',
+//                     select: 'name',
+//                     populate: {
+//                         path: 'parkingLot',
+//                         select: 'name address'
+//                     }
+//                 }
+//             })
+//             .populate("bookedBy", "firstName email")
+//             .lean();
+
+//         console.log('Successfully fetched bookings:', bookings.length);
+//         return res.status(200).json(bookings);
+
+//     } catch (error) {
+//         console.error('Full error stack:', error.stack);
+//         console.error('Error details:', {
+//             name: error.name,
+//             message: error.message,
+//             code: error.code,
+//             keyPattern: error.keyPattern,
+//             keyValue: error.keyValue
+//         });
+
+//         return res.status(500).json({
+//             message: 'Failed to fetch bookings',
+//             error: process.env.NODE_ENV === 'development' ? {
+//                 name: error.name,
+//                 message: error.message,
+//                 stack: error.stack
+//             } : null
+//         });
+//     }
+// };
 export const getUserBookings = async (req, res) => {
     try {
 
@@ -274,7 +327,9 @@ export const submitReview = async (req, res) => {
                 message: 'Booking not found'
             });
         }
- 
+
+        // Debug: Log the actual booking data from DB
+        console.log('Raw booking data from DB:', JSON.stringify(booking, null, 2));
 
         // Check for review existence more thoroughly
         const hasReview = booking.review &&

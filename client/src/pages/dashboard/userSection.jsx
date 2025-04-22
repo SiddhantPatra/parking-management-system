@@ -23,7 +23,7 @@ export function UserSection() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUserId, setEditingUserId] = useState(null); // Track which user is being edited
     const [editedUserDetails, setEditedUserDetails] = useState({}); // Store edited details
-  
+    const [currentUserRole, setCurrentUserRole] = useState(""); // Track the role of the logged-in user
 
 
     useEffect(() => {

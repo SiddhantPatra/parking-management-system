@@ -40,11 +40,23 @@ export const getAllUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, contact, vehicle } = req.body;
+    const { firstName, lastName, contact, vehicle, avatar } = req.body;
+
+    const updateFields = {
+      firstName,
+      lastName,
+      contact,
+      vehicle
+    };
+
+    // Only update avatar if it's provided
+    if (avatar) {
+      updateFields.avatar = avatar;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { firstName, lastName, contact, vehicle },
+      updateFields,
       { new: true }
     );
 

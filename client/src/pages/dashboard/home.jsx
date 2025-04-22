@@ -74,8 +74,13 @@ export function Home() {
     }
   };
 
-  //  pagination
-  const currentBookings = getCurrentBookings();  
+  // Get current items for pagination
+  const currentBookings = getCurrentBookings();
+  // const indexOfLastItem = currentPage * itemsPerPage;
+  // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  // const currentItems = currentBookings.slice(indexOfFirstItem, indexOfLastItem);
+  // const totalPages = Math.ceil(currentBookings.length / itemsPerPage);
+  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = currentBookings.slice(indexOfFirstItem, indexOfLastItem);

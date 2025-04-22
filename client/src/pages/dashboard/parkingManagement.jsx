@@ -29,9 +29,12 @@ import {
     addParkingLevel,
     updateParkingLevel,
     deleteParkingLevel,
-} from "@/redux/apiCalls"; 
-import DatePicker from "react-datepicker"; 
-import "react-datepicker/dist/react-datepicker.css"; 
+} from "@/redux/apiCalls";
+import { debounce } from "lodash";
+import DatePicker from "react-datepicker";
+import enGB from 'date-fns/locale/en-GB'; 
+import "react-datepicker/dist/react-datepicker.css";
+import axios from "axios";
 import { publicRequest, userRequest } from "@/requestMethods";
 import { toast } from "react-toastify";
 import ReviewsDialog from "@/components/ReviewsDialog";
@@ -61,7 +64,8 @@ const BookingDialog = lazy(() => import("../../components/BookingDialog"));
 const EditSlotDialog = lazy(() => import("../../components/EditSlotDialog"));
 const AddSlotDialog = lazy(() => import("../../components/AddSlotDialog"));
 
-const ParkingManagement = () => { 
+const ParkingManagement = () => {
+    const [parkingSlots, setParkingSlots] = useState([]);
     const [parkingLots, setParkingLots] = useState([]);
     const [levels, setLevels] = useState([]);
     const [selectedLot, setSelectedLot] = useState("");
@@ -122,9 +126,9 @@ const ParkingManagement = () => {
     useEffect(() => {
         const updateAvailability = async () => {
             const availabilityMap = {};
-           
+            console.log("Slots array:", slots); // Debugging log
             for (const slot of slots) {
-              
+                console.log("Checking availability for slot:", slot._id); // Debugging log
                 const isAvailable = await checkAvailability(slot._id);
                 availabilityMap[slot._id] = isAvailable;
             }
@@ -139,7 +143,7 @@ const ParkingManagement = () => {
     const checkAvailability = async (slotId) => {
         try {
             const token = localStorage.getItem("token");
-           
+            // console.log("Sending request for slotId:", slotId);
 
             const response = await publicRequest.get(`/parking/slots/availability`, {
                 params: {
@@ -181,7 +185,7 @@ const ParkingManagement = () => {
    
     const handleSelectSlot = (slot) => {
         setSelectedSlot(slot);
-       
+        console.log("Selected Slot:", slot);
     };
     // Fetch parking lots
     useEffect(() => {
@@ -397,7 +401,7 @@ const ParkingManagement = () => {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("User is not authenticated. Token missing.");
 
-          
+            console.log("Booking slot:", slotId, "Vehicle:", vehicleNumber);
 
             const response = await publicRequest.post(
                 `/parking/slots/${slotId}/book`,
@@ -434,7 +438,9 @@ const ParkingManagement = () => {
             // ✅ Reset fields
             setFromDate(new Date());
             setToDate(new Date(new Date().getTime() + 24 * 60 * 60 * 1000)); // Next day
-         
+            // setBookingDetails(null)
+            // setSelectedLot("")
+            // setSelectedLevel("")
         } catch (error) {
             console.error("Error booking slot:", error.response?.data || error.message);
             toast.error("Failed to book slot. Please try again.");
@@ -496,7 +502,7 @@ const ParkingManagement = () => {
                                         label="Select Parking Lot"
                                         value={selectedLot}
                                         onChange={(e) => {
-                                          
+                                            console.log("Selected Lot:", e);
                                             setSelectedLot(e);
                                             setSelectedLevel("");
                                         }}
@@ -565,7 +571,7 @@ const ParkingManagement = () => {
                                         label="Select Level"
                                         value={selectedLevel}
                                         onChange={(e) => {
-                                          
+                                            console.log("Selected Level:", e);
                                             setSelectedLevel(e);
                                         }}
                                         className="z-0"
@@ -903,7 +909,20 @@ const ParkingManagement = () => {
                             onChange={(e) => setEditLevel({ ...editLevel, name: e.target.value })}
                             required
                         />
-                      
+                        {/* <Input
+                            label="Floor Number"
+                            type="number"
+                            value={editLevel.floorNumber || ''}
+                            onChange={(e) => setEditLevel({ ...editLevel, floorNumber: e.target.value })}
+                            required
+                        /> */}
+                        {/* <Input
+                            label="Capacity"
+                            type="number"
+                            min="0"
+                            value={editLevel.capacity || ''}
+                            onChange={(e) => setEditLevel({ ...editLevel, capacity: e.target.value })}
+                        /> */}
                     </DialogBody>
                     <DialogFooter>
                         <Button variant="text" color="red" onClick={() => setOpenEditLevelDialog(false)}>

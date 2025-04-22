@@ -7,7 +7,7 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile,  UserSection } from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, UserSection } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 import ParkingManagement from "./pages/dashboard/parkingManagement";
 import BookingManagement from "./pages/dashboard/bookingManagement";
@@ -26,7 +26,7 @@ const allRoutes = [
         name: "dashboard",
         path: "/home",
         element: <Home />,
-        roles: ["admin", "moderator", "user"],  
+        roles: ["admin", "moderator", "user"], // Accessible by both
       },
       {
         icon: <UserCircleIcon {...icon} />,
@@ -48,14 +48,28 @@ const allRoutes = [
         path: "/bookingmanagement",
         element: <BookingManagement />,
         roles: ["admin", "moderator", "user"],
-      }, 
+      },
+      // {
+      //   icon: <TableCellsIcon {...icon} />,
+      //   name: "tables",
+      //   path: "/tables",
+      //   element: <Tables />,
+      //   roles: ["admin"], // Only admins can access this
+      // },
       {
         icon: <TableCellsIcon {...icon} />,
         name: "User Management",
         path: "/users",
         element: <UserSection />,
-        roles: ["admin", "moderator",],  
-      }, 
+        roles: ["admin", "moderator",], // Only admins can access this
+      },
+      // {
+      //   icon: <InformationCircleIcon {...icon} />,
+      //   name: "notifications",
+      //   path: "/notifications",
+      //   element: <Notifications />,
+      //   roles: ["admin", "moderator"],
+      // },
     ],
   },
   {

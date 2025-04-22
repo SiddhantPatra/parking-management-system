@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux"; // Import useDispatch
+import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
   CardBody,
@@ -14,27 +14,43 @@ import {
   Tooltip,
   Button,
   Input,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
 } from "@material-tailwind/react";
 import {
   HomeIcon,
   ChatBubbleLeftEllipsisIcon,
   Cog6ToothIcon,
   PencilIcon,
-} from "@heroicons/react/24/solid"; 
-import { ProfileInfoCard, MessageCard } from "@/widgets/cards"; 
+} from "@heroicons/react/24/solid";
+import { Link } from "react-router-dom";
+import { ProfileInfoCard, MessageCard } from "@/widgets/cards";
 import { publicRequest } from "@/requestMethods";
-import { updateUser } from "@/redux/userRedux"; // Import your Redux action
+import { updateUser } from "@/redux/userRedux";
+import yellow from "@/assets/images/yellow.png"
+import red from "@/assets/images/red.jpg"
+import sky from "@/assets/images/sky.jpg"
+import black from "@/assets/images/black.jpg"
+import green from "@/assets/images/green.jpg"
+// Array of available avatar images
+const avatarOptions = [
+  yellow, red, sky, black, green
+];
 
 export function Profile() {
   const user = useSelector((state) => state.user);
-  const dispatch = useDispatch();  
+  const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
   const [editedUserDetails, setEditedUserDetails] = useState({
     firstName: user.currentUser?.firstName || "",
     lastName: user.currentUser?.lastName || "",
     contact: user.currentUser?.contact || "",
     email: user.currentUser?.email || "",
     vehicle: user.currentUser?.vehicle || "",
+    avatar: user.currentUser?.avatar || red, // Default avatar
   });
 
   const handleEditClick = () => {
@@ -49,16 +65,23 @@ export function Profile() {
     }));
   };
 
+  const handleAvatarSelect = (avatarUrl) => {
+    setEditedUserDetails((prevDetails) => ({
+      ...prevDetails,
+      avatar: avatarUrl,
+    }));
+    setShowAvatarDialog(false);
+  };
+
   const handleSaveUser = async () => {
     try {
       const token = localStorage.getItem("token");
       const userId = user.currentUser._id;
-   
-  
+
       if (!token) {
         throw new Error("No token found. Please log in.");
       }
-  
+
       const res = await publicRequest.put(
         `/user/${userId}`,
         editedUserDetails,
@@ -69,13 +92,13 @@ export function Profile() {
         }
       );
       const updatedUser = res.data;
-  
+
       // Update localStorage and Redux state
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const updatedStoredUser = { ...storedUser, ...updatedUser };
       localStorage.setItem("user", JSON.stringify(updatedStoredUser));
       dispatch(updateUser(updatedUser));
-  
+
       setIsEditing(false);
       alert("Profile updated successfully!");
     } catch (err) {
@@ -93,13 +116,29 @@ export function Profile() {
         <CardBody className="p-4">
           <div className="mb-10 flex items-center justify-between flex-wrap gap-6">
             <div className="flex items-center gap-6">
-              <Avatar
-                src="/img/bruce-mars.jpeg"
-                alt="bruce-mars"
-                size="xl"
-                variant="rounded"
-                className="rounded-lg shadow-lg shadow-blue-gray-500/40"
-              />
+              <div className="relative">
+                <Avatar
+                  src={editedUserDetails.avatar}
+                  alt="profile-picture"
+                  size="xl"
+                  variant="rounded"
+                  className="rounded-lg shadow-lg shadow-blue-gray-500/40 cursor-pointer"
+                  onClick={() => isEditing && setShowAvatarDialog(true)}
+                />
+                {isEditing && (
+                  <div className="absolute -bottom-2 -right-2">
+                    <Tooltip content="Change Avatar">
+                      <Button
+                        size="sm"
+                        color="blue"
+                        onClick={() => setShowAvatarDialog(true)}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                )}
+              </div>
               <div>
                 {isEditing ? (
                   <Input
@@ -110,7 +149,7 @@ export function Profile() {
                   />
                 ) : (
                   <Typography variant="h5" color="blue-gray" className="mb-1">
-                    {user.currentUser?.firstName}'s 
+                    {user.currentUser?.firstName}'s
                   </Typography>
                 )}
                 <Typography
@@ -121,7 +160,6 @@ export function Profile() {
                 </Typography>
               </div>
             </div>
-            
           </div>
           <div className="gird-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3">
             <ProfileInfoCard
@@ -136,7 +174,8 @@ export function Profile() {
                   />
                 ) : (
                   user.currentUser?.firstName
-                ),"Last name": isEditing ? (
+                ),
+                "last name": isEditing ? (
                   <Input
                     name="lastName"
                     value={editedUserDetails.lastName}
@@ -195,6 +234,44 @@ export function Profile() {
           </div>
         </CardBody>
       </Card>
+
+      {/* Avatar Selection Dialog */}
+      <Dialog open={showAvatarDialog} handler={() => setShowAvatarDialog(false)}>
+        <DialogHeader>Select a Profile Picture</DialogHeader>
+        <DialogBody className="grid grid-cols-3 gap-4">
+          {avatarOptions.map((avatar, index) => (
+            <div
+              key={index}
+              className={`p-2 rounded-lg cursor-pointer ${editedUserDetails.avatar === avatar ? 'ring-2 ring-blue-500' : 'hover:bg-gray-100'
+                }`}
+              onClick={() => handleAvatarSelect(avatar)}
+            >
+              <Avatar
+                src={avatar}
+                size="xl"
+                className="w-full h-auto"
+              />
+            </div>
+          ))}
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            variant="text"
+            color="red"
+            onClick={() => setShowAvatarDialog(false)}
+            className="mr-1"
+          >
+            <span>Cancel</span>
+          </Button>
+          <Button
+            variant="gradient"
+            color="green"
+            onClick={() => setShowAvatarDialog(false)}
+          >
+            <span>Confirm</span>
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </>
   );
 }

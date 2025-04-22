@@ -10,7 +10,8 @@ import { jsPDF } from "jspdf";
 
 const PaymentSuccessModal = ({ open, onClose, bookingDetails }) => {
     const handleDownloadBooking = () => {
-        if (!bookingDetails) return; 
+        if (!bookingDetails) return;
+        console.log("bookingDetails : " + bookingDetails)
         // Create a new PDF document
         const doc = new jsPDF();
 

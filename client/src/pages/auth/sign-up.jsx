@@ -80,15 +80,15 @@ export function SignUp() {
       return;
     }
     try {
-      const response = await signup(dispatch, formData);  
-     
+      const response = await signup(dispatch, formData); // Await the API call
+      // console.log("Signup API Response:", response);
       if (response && response.success) {  // ✅ Check for success key
         // Automatically log the user in after signup
         const { email, password } = formData;
-   
+        // console.log("Attempting Automatic Login with:", { email, password });
 
         const loginResponse = await login(dispatch, { email, password });
-     
+        // console.log("Login API Response:", loginResponse);
 
         if (loginResponse && loginResponse.success) {
           navigate('/dashboard/profile'); // Redirect to profile page
@@ -96,7 +96,7 @@ export function SignUp() {
           setError("Automatic login failed. Please log in manually.");
           navigate('/auth/sign-in'); // Redirect to login page
         }
-       
+        // navigate('/dashboard/profile');
       } else {
         setError(response?.message || "Signup failed. Please try again.");
       }

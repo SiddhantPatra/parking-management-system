@@ -14,7 +14,11 @@ const UserSchema = new mongoose.Schema({
   },
   contact: { type: String, },
   verified: { type: String, default: "false" },
-  vehicle: { type: String, }
+  vehicle: { type: String, },
+  avatar: {
+    type: String,
+    default: "",
+  },
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

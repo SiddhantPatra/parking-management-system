@@ -56,7 +56,7 @@ export const addParkingLevel = async (req, res) => {
 // ✅ 3️⃣ Create a Parking Slot in a Floor
 export const createParkingSlot = async (req, res) => {
     try {
-        const { slotNumber, parkingLevel, price, fineAmount } = req.body;
+        const { slotNumber, parkingLevel, price } = req.body;
 
         // Ensure the parking level exists
         const levelExists = await ParkingLevel.findById(parkingLevel);
@@ -65,9 +65,7 @@ export const createParkingSlot = async (req, res) => {
         }
 
         // Create a new parking slot with a default status
-        const newSlot = new Parking({
-            slotNumber, parkingLevel, price, fineAmount, status: "Available"
-        });
+        const newSlot = new Parking({ slotNumber, parkingLevel, price, status: "Available" });
         await newSlot.save();
         res.status(201).json(newSlot);
     } catch (error) {
@@ -152,6 +150,8 @@ export const checkSlotAvailability = async (req, res) => {
     try {
         const { slotId, fromDate, toDate } = req.query;
 
+        console.log("Received slotId:", slotId);
+        console.log("Valid ObjectId?", mongoose.Types.ObjectId.isValid(slotId));
 
         if (!mongoose.Types.ObjectId.isValid(slotId)) {
             return res.status(400).json({ message: "Invalid Parking Slot ID" });
@@ -159,6 +159,7 @@ export const checkSlotAvailability = async (req, res) => {
 
         const slot = await Parking.findById(slotId);
         if (!slot) {
+            console.log("Slot not found in database:", slotId);
             return res.status(404).json({ message: "Parking slot not found" });
         }
 
@@ -183,8 +184,8 @@ export const checkSlotAvailability = async (req, res) => {
 export const bookParkingSlot = async (req, res) => {
     try {
         const { fromDate, toDate, vehicleNumber } = req.body;
-        const { id } = req.params;
-        const userId = req.user.id;
+        const { id } = req.params; // Slot ID from URL
+        const userId = req.user.id; // User ID from token
 
         // Validate input dates
         if (!fromDate || !toDate) {
@@ -196,13 +197,13 @@ export const bookParkingSlot = async (req, res) => {
         }
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Reset time to midnight for an accurate date-only comparison
-
+        
         const fromDateObj = new Date(fromDate);
         fromDateObj.setHours(0, 0, 0, 0); // Reset fromDate time to midnight
-
+        
         if (fromDateObj < today) {
             return res.status(400).json({ message: "Cannot book for past dates" });
-        }
+        } 
 
         // Validate vehicle number
         if (!vehicleNumber || vehicleNumber.trim() === "") {
@@ -233,7 +234,7 @@ export const bookParkingSlot = async (req, res) => {
         });
 
         await booking.save();
-
+ 
 
         res.status(201).json({
             message: "Booking successful",
@@ -302,6 +303,7 @@ export const getAllParkingSlots = async (req, res) => {
 export const getParkingSlot = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log("Received ID:", id); // Debugging log
 
         // Validate ObjectId format
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -309,7 +311,8 @@ export const getParkingSlot = async (req, res) => {
         }
 
         // Fetch the parking slot by ID
-        const slot = await Parking.findById(id);
+        const slot = await Parking.findById(id); // Use the correct model name
+        console.log("Found Slot:", slot); // Debugging log
 
         // Check if the slot exists
         if (!slot) {
@@ -319,6 +322,7 @@ export const getParkingSlot = async (req, res) => {
         // Return the slot data
         res.status(200).json({ data: slot });
     } catch (error) {
+        console.error("Error fetching parking slot:", error); // Debugging log
         res.status(500).json({ message: "Error fetching parking slot", error: error.message });
     }
 };
@@ -414,7 +418,7 @@ export const updateParkingLevel = async (req, res) => {
 export const updateParkingSlot = async (req, res) => {
     try {
         const { id } = req.params;
-        const { slotNumber, parkingLevel, price, fineAmount, status } = req.body;
+        const { slotNumber, parkingLevel, price,fineAmount , status } = req.body;
         const userRole = req.user.role;
 
         const slot = await Parking.findById(id);
@@ -542,7 +546,39 @@ export const deleteParkingSlot = async (req, res) => {
         res.status(500).json({ message: "Error deleting parking slot", error });
     }
 };
+// ✅ 8️⃣ Delete check Slot Availability
+// export const checkSlotAvailability = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const { fromDate, toDate } = req.query;
 
+//         // Validate the slot ID
+//         if (!mongoose.Types.ObjectId.isValid(id)) {
+//             return res.status(400).json({ message: "Invalid Parking Slot ID" });
+//         }
+
+//         // Check if the slot exists
+//         const slot = await Parking.findById(id);
+//         if (!slot) {
+//             return res.status(404).json({ message: "Parking slot not found" });
+//         }
+
+//         // Check for overlapping bookings
+//         const overlappingBooking = await Booking.findOne({
+//             parkingSlot: id,
+//             $or: [
+//                 { fromDate: { $lte: toDate }, toDate: { $gte: fromDate } }, // Overlapping bookings
+//             ],
+//         });
+
+//         // Return availability status
+//         const isAvailable = !overlappingBooking && slot.status === "Available";
+//         res.status(200).json({ available: isAvailable });
+//     } catch (error) {
+//         console.error("Error checking slot availability:", error);
+//         res.status(500).json({ message: "Error checking slot availability", error: error.message });
+//     }
+// };
 export const updateSlotStatus = async (req, res) => {
     try {
         const { id } = req.params;

@@ -183,7 +183,16 @@ export const bookSlot = async (slotId, fromDate, toDate) => {
     throw error;
   }
 };
- 
+export const handleBookSlot = async (slotId, fromDate, toDate) => {
+  try {
+    const response = await publicRequest.post("/api/bookSlot", { slotId, fromDate, toDate });
+    // Update the slots state or refetch slots
+    console.log("Booking successful:", response.data);
+  } catch (error) {
+    console.error("Error booking slot:", error);
+  }
+};
+
 // Update Booking
 export const updateBooking = async (bookingId, updatedData) => {
   const token = localStorage.getItem("token");

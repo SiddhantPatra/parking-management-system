@@ -26,7 +26,7 @@ const AddSlotDialog = ({ open, handleClose, handleSubmit, newSlot, setNewSlot })
                     label="Fine Amount (per day)"
                     type="number"
                     value={newSlot.fineAmount || 0}
-                    onChange={(e) => setNewSlot({ ...newSlot, fineAmount:e.target.value })}
+                    onChange={(e) => setNewSlot({ ...newSlot, fineAmount: Number(e.target.value) })}
                     required
                 />
             </DialogBody>

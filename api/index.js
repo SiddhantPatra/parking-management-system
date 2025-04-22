@@ -31,7 +31,15 @@ app.use((req, res, next) => {
 
 // ✅ Enable JSON parsing
 app.use(express.json());
- 
+
+// ✅ Debugging: Log All Incoming Requests
+// app.use((req, res, next) => {
+//   if (process.env.NODE_ENV !== "production") {
+// console.log(`Incoming request: ${req.method} ${req.path}`);
+// console.log("Headers:", req.headers);
+//   }
+//   next();
+// });
 
 // ✅ Import Routes
 import authRoute from "./routes/authRoute.js";

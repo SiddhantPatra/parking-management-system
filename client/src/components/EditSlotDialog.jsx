@@ -13,7 +13,13 @@ const EditSlotDialog = ({ open, handleClose, handleEditSubmit, editSlot, setEdit
                     onChange={(e) => setEditSlot({ ...editSlot, slotNumber: e.target.value })}
                     required
                 />
-              
+                {/* <Input
+                    label="Location"
+                    name="location"
+                    value={editSlot.location}
+                    onChange={(e) => setEditSlot({ ...editSlot, location: e.target.value })}
+                    required
+                /> */}
                 <Input
                     label="Price  (per day)"
                     name="price"
