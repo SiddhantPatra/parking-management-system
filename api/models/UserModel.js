@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String },
   phone: { type: Number },
-  profilePicture: { type: String },
+  // profilePicture: { type: String },
   role: {
     type: String,
     enum: ["user", "moderator", "admin"],
@@ -17,13 +17,16 @@ const UserSchema = new mongoose.Schema({
   vehicle: { type: String, },
   avatar: {
     type: String,
-    default: "",
-  },
+    default: "/avatars/red.jpg",
+    // Remove any custom validation that might be blocking updates
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true },
 });
 
+
 const User = mongoose.model("User", UserSchema);
+// const User = mongoose.model("User", UserSchema);
 export default User;

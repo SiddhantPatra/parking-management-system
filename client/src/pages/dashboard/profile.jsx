@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -35,10 +35,16 @@ import sky from "@/assets/images/sky.jpg"
 import black from "@/assets/images/black.jpg"
 import green from "@/assets/images/green.jpg"
 // Array of available avatar images
+// const avatarOptions = [
+//   yellow, red, sky, black, green
+// ];
 const avatarOptions = [
-  yellow, red, sky, black, green
+  "/avatars/yellow.png",
+  "/avatars/red.jpg",
+  "/avatars/sky.jpg",
+  "/avatars/black.jpg",
+  "/avatars/green.jpg",
 ];
-
 export function Profile() {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -50,8 +56,96 @@ export function Profile() {
     contact: user.currentUser?.contact || "",
     email: user.currentUser?.email || "",
     vehicle: user.currentUser?.vehicle || "",
-    avatar: user.currentUser?.avatar || red, // Default avatar
+    avatar: user.currentUser?.avatar || "/avatars/red.jpg", // Default avatar
   });
+  const fileInputRef = useRef(null);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const res = await publicRequest.post(
+        `/user/${user.currentUser._id}/upload-avatar`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      // Update local state
+      setEditedUserDetails(prev => ({
+        ...prev,
+        avatar: res.data.avatar
+      }));
+
+      // Update Redux and localStorage
+      const updatedUser = {
+        ...user.currentUser,
+        avatar: res.data.avatar
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      dispatch(updateUser(updatedUser));
+
+      alert('Avatar updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Error uploading avatar');
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    try {
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        throw new Error("Passwords don't match");
+      }
+  
+      if (passwordData.newPassword.length < 6) {
+        throw new Error("Password must be at least 6 characters");
+      }
+  
+      const response = await publicRequest.put(
+        `/user/${user.currentUser._id}/change-password`,
+        { 
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+  
+      alert(response.data.message || 'Password changed successfully!');
+      setShowPasswordDialog(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+    } catch (err) {
+      console.error('Password change error:', err);
+      alert(
+        err.response?.data?.message || 
+        err.message || 
+        'Error changing password'
+      );
+    }
+  };
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -81,7 +175,7 @@ export function Profile() {
       if (!token) {
         throw new Error("No token found. Please log in.");
       }
-
+      console.log("Sending payload:", editedUserDetails);
       const res = await publicRequest.put(
         `/user/${userId}`,
         editedUserDetails,
@@ -92,7 +186,7 @@ export function Profile() {
         }
       );
       const updatedUser = res.data;
-
+      console.log("Update response:", res.data);
       // Update localStorage and Redux state
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const updatedStoredUser = { ...storedUser, ...updatedUser };
@@ -272,6 +366,97 @@ export function Profile() {
           </Button>
         </DialogFooter>
       </Dialog>
+      {/* {isEditing && (
+        <Button
+          color="blue"
+          className="mt-4"
+          onClick={() => fileInputRef.current.click()}
+        >
+          Upload New Avatar
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAvatarUpload}
+            accept="image/*"
+            style={{ display: 'none' }}
+          />
+        </Button>
+      )} */}
+
+      {/* Password change dialog */}
+      <Dialog open={showPasswordDialog} handler={() => setShowPasswordDialog(false)}>
+        <DialogHeader>Change Password</DialogHeader>
+        <DialogBody>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              label="Current Password"
+              value={passwordData.currentPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+            />
+            <Input
+              type="password"
+              label="New Password (min 6 characters)"
+              value={passwordData.newPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+            />
+            {passwordData.newPassword && passwordData.newPassword.length < 6 && (
+              <Typography variant="small" color="red">
+                Password must be at least 6 characters
+              </Typography>
+            )}
+            <Input
+              type="password"
+              label="Confirm New Password"
+              value={passwordData.confirmPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+            />
+            {passwordData.newPassword !== passwordData.confirmPassword && (
+              <Typography variant="small" color="red">
+                Passwords don't match
+              </Typography>
+            )}
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            variant="text"
+            color="red"
+            onClick={() => {
+              setShowPasswordDialog(false);
+              setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+              });
+            }}
+            className="mr-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="gradient"
+            color="green"
+            onClick={handlePasswordChange}
+            disabled={
+              !passwordData.currentPassword ||
+              !passwordData.newPassword ||
+              passwordData.newPassword.length < 6 ||
+              passwordData.newPassword !== passwordData.confirmPassword
+            }
+          >
+            Change Password
+          </Button>
+        </DialogFooter>
+      </Dialog>
+      {/* Add password change button somewhere in your UI */}
+      <Button
+        color="red"
+        className="mt-4"
+        onClick={() => setShowPasswordDialog(true)}
+      >
+        Change Password
+      </Button>
     </>
   );
 }

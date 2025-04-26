@@ -9,10 +9,18 @@ import {
 import {
   deleteUser,
   getAllUser,
-  getUser,
-  updateUser,
+  getUser, 
   updateUserRole,
+  updateUser,
+  uploadUserAvatar,
+  changePassword
 } from '../controllers/userController.js';
+import { uploadAvatar } from '../controllers/uploadMiddleware.js';
+
+
+router.post('/:id/upload-avatar', verifyTokenAndAuthorization, uploadAvatar, uploadUserAvatar);
+router.put('/:id/change-password', verifyTokenAndAuthorization, changePassword);
+
 
 // UPDATE User (only the user themselves or an admin can update)
 router.put("/:id", verifyTokenAndAuthorization, updateUser);

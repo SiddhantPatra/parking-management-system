@@ -2,13 +2,140 @@ import React, { useState, useEffect } from "react";
 import {
     Card, CardHeader, CardBody, Typography, Button, Dialog,
     DialogHeader, DialogBody, DialogFooter, Input,
-    Chip, Rating, Textarea
+    Chip, Rating, Textarea, Tooltip, IconButton
 } from "@material-tailwind/react";
 import { publicRequest } from "@/requestMethods";
 import { deleteBooking, updateBooking } from "@/redux/apiCalls";
-import jsPDF from "jspdf";
+// import jsPDF from "jspdf";
 import enGB from 'date-fns/locale/en-GB';
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 
+// PDF Document Component
+const BookingsPDF = ({ bookings }) => {
+    const styles = StyleSheet.create({
+        page: {
+            padding: 30,
+            fontSize: 10
+        },
+        header: {
+            fontSize: 18,
+            marginBottom: 20,
+            textAlign: 'center',
+            fontWeight: 'bold'
+        },
+        table: {
+            display: "table",
+            width: "100%",
+            borderStyle: "solid",
+            borderWidth: 1,
+            borderRightWidth: 0,
+            borderBottomWidth: 0
+        },
+        tableRow: {
+            margin: "auto",
+            flexDirection: "row"
+        },
+        tableColHeader: {
+            width: "16.66%",
+            borderStyle: "solid",
+            borderWidth: 1,
+            borderLeftWidth: 0,
+            borderTopWidth: 0,
+            backgroundColor: '#f0f0f0',
+            padding: 5
+        },
+        tableCol: {
+            width: "16.66%",
+            borderStyle: "solid",
+            borderWidth: 1,
+            borderLeftWidth: 0,
+            borderTopWidth: 0,
+            padding: 5
+        },
+        textHeader: {
+            fontWeight: 'bold',
+            fontSize: 12
+        },
+        footer: {
+            position: 'absolute',
+            bottom: 30,
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            fontSize: 10,
+            color: 'grey'
+        }
+    });
+
+    const formatDateDDMMYYYY = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
+    return (
+        <Document>
+            <Page size="A4" style={styles.page}>
+                <Text style={styles.header}>Bookings Report</Text>
+                <View style={styles.table}>
+                    {/* Table Header */}
+                    <View style={styles.tableRow}>
+                        <View style={styles.tableColHeader}>
+                            <Text style={styles.textHeader}>Slot</Text>
+                        </View>
+                        <View style={styles.tableColHeader}>
+                            <Text style={styles.textHeader}>Vehicle</Text>
+                        </View>
+                        <View style={styles.tableColHeader}>
+                            <Text style={styles.textHeader}>From Date</Text>
+                        </View>
+                        <View style={styles.tableColHeader}>
+                            <Text style={styles.textHeader}>To Date</Text>
+                        </View>
+                        <View style={styles.tableColHeader}>
+                            <Text style={styles.textHeader}>Status</Text>
+                        </View>
+                        <View style={styles.tableColHeader}>
+                            <Text style={styles.textHeader}>Details</Text>
+                        </View>
+                    </View>
+                    
+                    {/* Table Rows */}
+                    {bookings.map((booking, index) => (
+                        <View key={index} style={styles.tableRow}>
+                            <View style={styles.tableCol}>
+                                <Text>{booking.parkingSlot?.slotNumber || "N/A"}</Text>
+                            </View>
+                            <View style={styles.tableCol}>
+                                <Text>{booking.vehicleNumber}</Text>
+                            </View>
+                            <View style={styles.tableCol}>
+                                <Text>{formatDateDDMMYYYY(booking.fromDate)}</Text>
+                            </View>
+                            <View style={styles.tableCol}>
+                                <Text>{formatDateDDMMYYYY(booking.toDate)}</Text>
+                            </View>
+                            <View style={styles.tableCol}>
+                                <Text>{booking.status}</Text>
+                            </View>
+                            <View style={styles.tableCol}>
+                                <Text>{booking.parkingSlot?.parkingLevel?.parkingLot?.name || "N/A"}</Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+                <Text style={styles.footer}>
+                    Generated on {new Date().toLocaleDateString()} | Total Bookings: {bookings.length}
+                </Text>
+            </Page>
+        </Document>
+    );
+};
 const BookingManagement = () => {
     const [bookings, setBookings] = useState([]);
     const [error, setError] = useState("");
@@ -282,13 +409,166 @@ const BookingManagement = () => {
         // Save the PDF
         doc.save(`Parking_Receipt_${booking._id.slice(0, 8)}.pdf`);
     };
+ // Excel Download Handler
+ const handleExcelDownload = () => {
+    try {
+        // Prepare data for Excel
+        const excelData = bookings.map(booking => ({
+            "Slot Number": booking.parkingSlot?.slotNumber || "N/A",
+            "Vehicle Number": booking.vehicleNumber,
+            "From Date": formatDateDDMMYYYY(booking.fromDate),
+            "To Date": formatDateDDMMYYYY(booking.toDate),
+            "Status": booking.status,
+            "Parking Lot": booking.parkingSlot?.parkingLevel?.parkingLot?.name || "N/A",
+            "Level": booking.parkingSlot?.parkingLevel?.name || "N/A",
+            "Address": booking.parkingSlot?.parkingLevel?.parkingLot?.address || "N/A",
+            "Fine Amount": booking.fineAmount || "N/A",
+            "Overstay Days": booking.overstayDays || "N/A"
+        }));
 
+        // Create worksheet
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        
+        // Create workbook
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Bookings");
+        
+        // Generate Excel file
+        const excelBuffer = XLSX.write(workbook, { 
+            bookType: "xlsx", 
+            type: "array" 
+        });
+        
+        // Create blob and download
+        const data = new Blob([excelBuffer], { 
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+        });
+        saveAs(data, `bookings_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+        console.error("Error generating Excel file:", error);
+        setError("Failed to generate Excel file. Please try again.");
+    }
+};
+
+// Simple PDF Download Handler (using jsPDF - alternative to react-pdf)
+const handleTablePDFDownload = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Bookings Report", 105, 15, { align: 'center' });
+    
+    // Date
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
+    
+    // Table headers
+    const headers = [
+        "Slot",
+        "Vehicle",
+        "From Date",
+        "To Date",
+        "Status",
+        "Parking Lot"
+    ];
+    
+    // Table data
+    const data = bookings.map(booking => [
+        booking.parkingSlot?.slotNumber || "N/A",
+        booking.vehicleNumber,
+        formatDateDDMMYYYY(booking.fromDate),
+        formatDateDDMMYYYY(booking.toDate),
+        booking.status,
+        booking.parkingSlot?.parkingLevel?.parkingLot?.name || "N/A"
+    ]);
+    
+    // Add table
+    doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 30,
+        styles: {
+            fontSize: 8,
+            cellPadding: 2,
+            overflow: 'linebreak'
+        },
+        headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        }
+    });
+    
+    // Footer
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Total Bookings: ${bookings.length}`, 105, doc.lastAutoTable.finalY + 10, { align: 'center' });
+    
+    // Save the PDF
+    doc.save(`bookings_report_${new Date().toISOString().split('T')[0]}.pdf`);
+};
     return (
         <>
             <div className="mt-12 mb-8 flex flex-col gap-12">
-                <Card>
+            <Card>
                     <CardHeader variant="gradient" color="gray" className="mb-8 p-6 flex justify-between items-center">
                         <Typography variant="h6" color="white">Booking Management</Typography>
+                        <div className="flex gap-2">
+                            <Tooltip content="Download Excel">
+                                <IconButton 
+                                    variant="gradient" 
+                                    color="green" 
+                                    onClick={handleExcelDownload}
+                                    disabled={bookings.length === 0}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg> 
+                                </IconButton>
+                            </Tooltip>
+                            
+                            <Tooltip content="Download PDF">
+                                <IconButton 
+                                    variant="gradient" 
+                                    color="red" 
+                                    onClick={handleTablePDFDownload}
+                                    disabled={bookings.length === 0}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg> 
+                                </IconButton>
+                            </Tooltip>
+                            
+                            {/* Alternative PDF Download using react-pdf */}
+                            {bookings.length > 0 && (
+                                <PDFDownloadLink 
+                                    document={<BookingsPDF bookings={bookings} />} 
+                                    fileName={`bookings_report_${new Date().toISOString().split('T')[0]}.pdf`}
+                                >
+                                    {({ loading }) => (
+                                        <Tooltip content="Download PDF (Alternative)">
+                                            <IconButton 
+                                                variant="gradient" 
+                                                color="blue" 
+                                                disabled={loading}
+                                            >
+                                                {loading ? 'Loading...' : (<>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg> 
+                                                </>
+                                                )}
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </PDFDownloadLink>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardBody className="overflow-x-scroll pt-0 pb-2">
                         {error && (
